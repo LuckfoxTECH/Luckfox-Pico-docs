@@ -38,3 +38,7 @@ Luckfox-Pico-docs/
 - Keep file names clear and descriptive.
 - Place documents in the matching language folder when possible.
 - Put large binary files only in the appropriate resource directory.
+
+## Repository synchronization
+
+The official GitHub repository automatically synchronizes its main branch and Git tags to [Gitee](https://gitee.com/LuckfoxTECH/Luckfox-Pico-docs). See the [synchronization guide](.github/GITEE_SYNC.md) for setup, scope, and troubleshooting.

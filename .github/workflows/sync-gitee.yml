@@ -1,0 +1,81 @@
+name: Sync to Gitee
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-gitee
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'LuckfoxTECH/Luckfox-Pico-docs'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout main and all tags
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Sync main and tags
+        shell: bash
+        env:
+          GITEE_SSH_PRIVATE_KEY: ${{ secrets.GITEE_SSH_PRIVATE_KEY }}
+          GITEE_SSH_URL: git@gitee.com:LuckfoxTECH/Luckfox-Pico-docs.git
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$GITEE_SSH_PRIVATE_KEY" ]]; then
+            echo "::error::Add the GITEE_SSH_PRIVATE_KEY repository secret. See .github/GITEE_SYNC.md."
+            exit 1
+          fi
+
+          if [[ ! "$GITEE_SSH_URL" =~ ^git@gitee\.com:[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\.git$ ]]; then
+            echo "::error::Set GITEE_SSH_URL to the confirmed Gitee repository SSH URL. See .github/GITEE_SYNC.md."
+            exit 1
+          fi
+
+          umask 077
+          ssh_dir="$RUNNER_TEMP/gitee-sync"
+          mkdir -p "$ssh_dir"
+          printf '%s\n' "$GITEE_SSH_PRIVATE_KEY" | tr -d '\r' > "$ssh_dir/id_ed25519"
+          ssh-keygen -y -P '' -f "$ssh_dir/id_ed25519" > /dev/null
+
+          export GIT_SSH_COMMAND="ssh -F /dev/null \
+            -i \"$ssh_dir/id_ed25519\" \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o ConnectTimeout=20 \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile=\"$GITHUB_WORKSPACE/.github/gitee_known_hosts\""
+
+          # Keep existing Gitee history and tags if they diverge.
+          git push "$GITEE_SSH_URL" \
+            HEAD:refs/heads/main
+          if git show-ref --tags --quiet; then
+            git push "$GITEE_SSH_URL" \
+              'refs/tags/*:refs/tags/*'
+          fi
+
+          {
+            printf 'Synced main commit: `%s`\n\n' "$(git rev-parse HEAD)"
+            gitee_path="${GITEE_SSH_URL#git@gitee.com:}"
+            printf '[View the Gitee repository](https://gitee.com/%s)\n' "${gitee_path%.git}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove temporary SSH key
+        if: always()
+        shell: bash
+        run: rm -f -- "$RUNNER_TEMP/gitee-sync/id_ed25519"
