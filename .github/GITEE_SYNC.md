@@ -28,7 +28,7 @@ GitHub 个人账号 SSH 公钥用于本机向 GitHub 推送，不能代替仓库
 - Gitee main 只是落后时，正常快进更新；存在独立提交时会拒绝覆盖，需要先处理历史差异。
 - 保留 Gitee 其他分支，不删除标签，不使用强制推送。
 - GitHub Releases 附件、Issues 和仓库设置不属于 Git 内容，不通过本工作流复制。
-- Docs/en/ipc 和 Docs/zh/ipc 当前为嵌套仓库引用；本工作流同步父仓库保存的提交引用，不会把内部文件转换成普通文件。文件结构调整需单独处理。
+- 使用裸克隆同步 Git 历史和对象，不展开工作目录或子模块。Docs/en/ipc 和 Docs/zh/ipc 当前为嵌套仓库引用，工作流保留父仓库中的引用，不会把内部文件转换成普通文件。文件结构调整需单独处理。
 - 首次传输包含仓库的二进制文件；若 Gitee 明确报告容量或单文件限制，应按实际错误处理。
 
 ## 验证与排障
@@ -38,6 +38,7 @@ GitHub 个人账号 SSH 公钥用于本机向 GitHub 推送，不能代替仓库
 - Secret 缺失：在官方仓库添加名称完全一致的 GITEE_SSH_PRIVATE_KEY。
 - DeployKey does not support push code：将公钥配置到有仓库写权限的 Gitee 个人账号 SSH 公钥中。
 - Permission denied (publickey)：核对两边是否使用同一对密钥。
+- Access denied：核对公钥所属 Gitee 账号是否有目标仓库和 main 分支的推送权限。
 - non-fast-forward：检查 Gitee 是否有独立提交，合并需要保留的内容后再运行。
 - Host key verification failed：对照 https://help.gitee.com/account/gitees-ssh-key-fingerprints 核验主机公钥。
 
