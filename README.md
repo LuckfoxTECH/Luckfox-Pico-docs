@@ -41,4 +41,4 @@ Luckfox-Pico-docs/
 
 ## Repository synchronization
 
-The official GitHub repository automatically synchronizes its main branch and Git tags to [Gitee](https://gitee.com/LuckfoxTECH/Luckfox-Pico-docs). See the [synchronization guide](.github/GITEE_SYNC.md) for setup, scope, and troubleshooting.
+The [Gitee mirror](https://gitee.com/LuckfoxTECH/Luckfox-Pico-docs) is updated manually when needed.
